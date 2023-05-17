@@ -9,8 +9,9 @@ Base = declarative_base()
 
 
 class CoffeeShop(Base):
+    
     __tablename__ = 'coffeeshop_coffeeshop'
-    id = Column(Integer)
+    id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
     description = Column(Text, nullable=False)
     latitude = Column(Float)

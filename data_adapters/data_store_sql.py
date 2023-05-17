@@ -1,10 +1,11 @@
 import sqlalchemy
 from sqlalchemy import create_engine
 
+import config
+
 
 class DataStoreSql():
 
     def __init__(self):
+        pass
 
-        engine = create_engine("postgresql+psycopg2://demidrol:1q2w3e@localhost/mydb")
-        engine.connect()
