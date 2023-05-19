@@ -51,20 +51,26 @@ def description_option_bot(call):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     coffeeshop_id = int(call.data.split('_')[-1])
     coffeeshop = session.query(CoffeeShop).get(coffeeshop_id)
-    bot.send_message(call.from_user.id, coffeeshop.description, reply_markup=markup)
+    text = 'Описание:\n {description}\nАдрес:\n {address}\nСоц.сети и сайты:\n'.format(
+        description=coffeeshop.description,
+        address=coffeeshop.address
+    )
+    for website in coffeeshop.website:
+        text += website + '\n'
+    bot.send_message(call.from_user.id, text, reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: 'coffee_shop_nearby' in call.data)
 def coffee_shop_nearby(call):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    geolocation = types.KeyboardButton('Отправить координаты', request_location=True)
+    geolocation = types.KeyboardButton('Отправить свое местоположения', request_location=True)
     markup.add(geolocation)
-    print(geolocation)
     bot.send_message(call.from_user.id, 'Отправьте ваши координаты', reply_markup=markup)
 
 
 @bot.message_handler(content_types=['location'])
 def geolocation_message(message):
+    x = message
     print(message)
 
 

@@ -13,6 +13,7 @@ class CoffeeShop(Base):
     __tablename__ = 'coffeeshop_coffeeshop'
     id = Column(Integer, primary_key=True)
     name = Column(String(50), nullable=False)
+    address = Column(String(500), nullable=False)
     description = Column(Text, nullable=False)
     latitude = Column(Float)
     longitude = Column(Float)
