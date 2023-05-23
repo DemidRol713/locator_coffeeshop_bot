@@ -2,6 +2,7 @@ import telebot
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from telebot import types
+import logging
 
 import config
 from model.coffeeshop import CoffeeShop
@@ -10,6 +11,26 @@ from service.coffeeshop_service import CoffeeShopService
 bot = telebot.TeleBot(config.TG_TOKEN)
 engine = create_engine(config.DATA_BASE)
 session = Session(bind=engine)
+
+logger = telebot.logger
+# telebot.logger.basicConfig(filename='filename.log', level=logging.DEBUG,
+#                     format=' %(asctime)s - %(levelname)s - %(message)s')
+telebot.logger.setLevel(logging.DEBUG)
+
+if __name__ == '__main__':
+    import app
+
+
+def get_menu_btn(markup):
+    """
+    Возвращает список кнопок меню
+    :return:
+    """
+    btn_list = [types.KeyboardButton(btn) for btn in config.MENU]
+    for btn in btn_list:
+        markup.add(btn)
+
+    return markup
 
 
 @bot.message_handler(commands=['start'])
@@ -20,7 +41,9 @@ def start(message):
     :return:
     """
 
-    markup = types.InlineKeyboardMarkup()
+    markup = types.ReplyKeyboardMarkup()
+    markup = get_menu_btn(markup)
+
     bot.send_message(message.from_user.id, "👋 Привет! Я бот-помощник в поиске кофейн поблизости!", reply_markup=markup)
 
 
@@ -78,11 +101,17 @@ def coffeeshop_card(call):
     )
     for website in coffeeshop.website:
         text += website + '\n'
+
     bot.send_message(call.from_user.id, text, reply_markup=markup)
+    bot.send_location(call.from_user.id, coffeeshop.latitude, coffeeshop.longitude)
 
 
 @bot.callback_query_handler(func=lambda call: 'coffee_shop_nearby' in call.data)
 def user_location(call):
+    """
+    Просит у пользователя его местоположение
+
+    """
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     geolocation = types.KeyboardButton('Отправить свое местоположения', request_location=True)
     markup.add(geolocation)
@@ -91,21 +120,21 @@ def user_location(call):
 
 
 @bot.message_handler(content_types=['location'])
-def coffeeshop_nearby(message):
-
+def coffeeshop_nearby(message: types.Message):
+    """
+    Возвращает список кофейн поблизости
+    """
     service = CoffeeShopService(session)
     markup = types.InlineKeyboardMarkup()
+    bot.send_message(message.from_user.id, 'Идет поиск кофеен по близости', reply_markup=get_menu_btn(types.ReplyKeyboardMarkup()))
 
-    data = service.get_coffeeshop_nearby(message.location)
-
+    # data = service.get_coffeeshop_nearby(message.location.latitude, message.location.longitude)
+    data = service.get_coffeeshop_nearby(60.016208, 30.372300)
     for coffeeshop in data:
-        text = '{name}  {distance}'.format(
+        text = '{name}  {distance} км'.format(
             name=coffeeshop.name,
             distance=coffeeshop.distance
         )
-        markup.add(types.InlineKeyboardButton(text))
+        markup.add(types.InlineKeyboardButton(text=text, callback_data=f'coffeeshop_{coffeeshop.id}'))
 
     bot.send_message(message.from_user.id, 'В радиусе 2 км:', reply_markup=markup)
-
-
-bot.polling(none_stop=True, interval=0)

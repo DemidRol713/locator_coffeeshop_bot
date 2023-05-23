@@ -17,5 +17,13 @@ class DataStoreSql():
 
         return self.session.query(self.model).get(id)
 
+    def get_data_with_limits(self, limit):
+
+        return self.session.query(self.model).limit(limit)
+
+    def get_filtered_data(self, filter):
+
+        return self.session.query(self.model).filter(filter)
+
 
 

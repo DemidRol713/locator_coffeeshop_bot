@@ -16,4 +16,10 @@ class CoffeeShopManager:
         """
         data_store = DataStoreSql(session=self.session, model=CoffeeShop)
 
+        return data_store.get_data_with_limits(10)
+
+    def get_filtered_coffeeshop_list(self, filter):
+
+        data_store = DataStoreSql(session=self.session, model=CoffeeShop)
+
         return data_store.get_all()
