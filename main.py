@@ -1,3 +1,6 @@
+import os.path
+import time
+
 import telebot
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -6,7 +9,9 @@ import logging
 
 import config
 from model.coffeeshop import CoffeeShop
-from service.coffeeshop_service import CoffeeShopService
+from page_controller.coffeeshop_card_page_controller import CoffeeShopPageController
+from page_controller.coffeeshop_list_page_controller import CoffeeShopListPageController
+from page_controller.coffeeshop_nearby_page_controller import CoffeeShopsNearPageController
 
 bot = telebot.TeleBot(config.TG_TOKEN)
 engine = create_engine(config.DATA_BASE)
@@ -76,33 +81,43 @@ def description_option_bot(call):
 
 
 @bot.message_handler(commands=['list_all_coffeeshop'])
-def list_all_coffeeshop(message):
+def list_coffeeshop(message, page=1):
     """
     Список всех кофеен в базе данных
     :param message:
     :return:
     """
     markup = types.InlineKeyboardMarkup()
-    coffeeshop_list = session.query(CoffeeShop).limit(10)
-    for coffeeshop in coffeeshop_list:
-        markup.add(types.InlineKeyboardButton(text=coffeeshop.name, callback_data='coffeeshop_{id}'.format(id=coffeeshop.id)))
+    page_controller = CoffeeShopListPageController(session)
 
-    bot.send_message(message.from_user.id, "Что нужно?", reply_markup=markup)
+    coffeeshop_list, count = page_controller.get_coffeeshop_list(page)
+    for coffeeshop in coffeeshop_list:
+        markup.add(types.InlineKeyboardButton(text=coffeeshop['text'], callback_data=coffeeshop['callback_data']))
+
+    markup = pagination(markup, page, count)
+
+    bot.send_message(message.from_user.id, "Кофейни Спб: ", reply_markup=markup)
 
 
 @bot.callback_query_handler(func=lambda call: 'coffeeshop' in call.data)
 def coffeeshop_card(call):
+    """
+    Карточка с данными кофейни
+    :param call:
+    :return:
+    """
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    coffeeshop_id = int(call.data.split('_')[-1])
-    coffeeshop = session.query(CoffeeShop).get(coffeeshop_id)
-    text = 'Описание:\n {description}\nАдрес:\n {address}\nСоц.сети и сайты:\n'.format(
-        description=coffeeshop.description,
-        address=coffeeshop.address
-    )
-    for website in coffeeshop.website:
-        text += website + '\n'
+    page_controller = CoffeeShopPageController(session)
 
-    bot.send_message(call.from_user.id, text, reply_markup=markup)
+    coffeeshop_id = int(call.data.split('_')[-1])
+
+    coffeeshop = page_controller.get_coffeeshop(coffeeshop_id)
+
+    for image_name in coffeeshop['images']:
+        image = open(os.path.abspath(config.DATA_FOLDER + image_name), 'rb')
+        bot.send_photo(call.from_user.id, image)
+
+    bot.send_message(call.from_user.id, coffeeshop['text'], reply_markup=markup)
     bot.send_location(call.from_user.id, coffeeshop.latitude, coffeeshop.longitude)
 
 
@@ -110,7 +125,6 @@ def coffeeshop_card(call):
 def user_location(call):
     """
     Просит у пользователя его местоположение
-
     """
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     geolocation = types.KeyboardButton('Отправить свое местоположения', request_location=True)
@@ -124,17 +138,45 @@ def coffeeshop_nearby(message: types.Message):
     """
     Возвращает список кофейн поблизости
     """
-    service = CoffeeShopService(session)
+    page_controller = CoffeeShopsNearPageController(session)
     markup = types.InlineKeyboardMarkup()
+
     bot.send_message(message.from_user.id, 'Идет поиск кофеен по близости', reply_markup=get_menu_btn(types.ReplyKeyboardMarkup()))
-
+    tic = time.perf_counter()
     # data = service.get_coffeeshop_nearby(message.location.latitude, message.location.longitude)
-    data = service.get_coffeeshop_nearby(60.016208, 30.372300)
-    for coffeeshop in data:
-        text = '{name}  {distance} км'.format(
-            name=coffeeshop.name,
-            distance=coffeeshop.distance
-        )
-        markup.add(types.InlineKeyboardButton(text=text, callback_data=f'coffeeshop_{coffeeshop.id}'))
+    data = page_controller.get_coffeeshop_nearby(60.016208, 30.372300)
+    for item in data:
+        markup.add(types.InlineKeyboardButton(text=item['text'], callback_data=item['callback_data']))
 
+    toc = time.perf_counter()
     bot.send_message(message.from_user.id, 'В радиусе 2 км:', reply_markup=markup)
+    print(f"Вычисление заняло {toc - tic:0.4f} секунд")
+    print(len(data))
+
+
+def pagination(markup, page, amount_data):
+    """
+    Добавляет пагинацию
+    :param markup:
+    :param page:
+    :param amount_data:
+    :return:
+    """
+    left = page - 1 if page != 1 else amount_data
+    right = page + 1 if page != amount_data else 1
+
+    btn_previous = types.InlineKeyboardButton(text='<-', callback_data=f'page {left}')
+    btn_page = types.InlineKeyboardButton(text=f'{page}/{amount_data}', callback_data='_')
+    btn_next = types.InlineKeyboardButton(text='->', callback_data=f'page {right}')
+
+    markup.add(btn_previous, btn_page, btn_next)
+
+    return markup
+
+
+@bot.callback_query_handler(func=lambda call: 'page' in call.data)
+def callback_page(call):
+
+    page = call.data.split()[-1]
+    if page.isdigit():
+        list_coffeeshop(call, int(page))

@@ -2,10 +2,9 @@ from math import radians, cos, sin, sqrt, asin
 import geopy.distance
 
 from model.coffeeshop_manager import CoffeeShopManager
-from model.coffeeshop import CoffeeShop
 
 
-class CoffeeShopService:
+class CoffeeShopNearbyService:
 
     def __init__(self, session):
 
@@ -24,8 +23,8 @@ class CoffeeShopService:
         coffeeshop_nearby_list = []
         for coffeeshop in coffeeshop_list:
             distance = geopy.distance.geodesic((user_latitude, user_longitude), (coffeeshop.latitude, coffeeshop.longitude)).km
-            # if distance <= 2:
-            coffeeshop.distance = round(distance, 2)
-            coffeeshop_nearby_list.append(coffeeshop)
+            if distance <= 2:
+                coffeeshop.distance = round(distance, 2)
+                coffeeshop_nearby_list.append(coffeeshop)
 
-        return coffeeshop_nearby_list
+        return sorted(coffeeshop_nearby_list, key=lambda item: item.distance)

@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from paginate_sqlalchemy import SqlalchemyOrmPage
+
 
 class DataStoreSql():
 
@@ -24,6 +26,13 @@ class DataStoreSql():
     def get_filtered_data(self, filter):
 
         return self.session.query(self.model).filter(filter)
+
+    def get_data_with_pagination(self, page, amount_data):
+
+        data = SqlalchemyOrmPage(self.session.query(self.model), page, amount_data)
+        count = len(self.session.query(self.model).all())
+
+        return data, count
 
 
 
