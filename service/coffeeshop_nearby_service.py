@@ -19,7 +19,7 @@ class CoffeeShopNearbyService:
         """
         coffeeshop_manager = CoffeeShopManager(self.session)
 
-        coffeeshop_list = coffeeshop_manager.get_coffeeshop_list()
+        coffeeshop_list = coffeeshop_manager.get_coffeeshops()
         coffeeshop_nearby_list = []
         for coffeeshop in coffeeshop_list:
             distance = geopy.distance.geodesic((user_latitude, user_longitude), (coffeeshop.latitude, coffeeshop.longitude)).km

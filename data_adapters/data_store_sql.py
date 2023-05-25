@@ -34,5 +34,9 @@ class DataStoreSql():
 
         return data, count
 
+    def get_data_by_string(self, data):
+
+        return self.session.query(self.model).filter(self.model.name.ilike(f'{data}%'))
+
 
 

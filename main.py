@@ -12,6 +12,7 @@ from model.coffeeshop import CoffeeShop
 from page_controller.coffeeshop_card_page_controller import CoffeeShopPageController
 from page_controller.coffeeshop_list_page_controller import CoffeeShopListPageController
 from page_controller.coffeeshop_nearby_page_controller import CoffeeShopsNearPageController
+from page_controller.search_coffeeshop_page_controller import SearchCoffeeShopPageController
 
 bot = telebot.TeleBot(config.TG_TOKEN)
 engine = create_engine(config.DATA_BASE)
@@ -143,8 +144,8 @@ def coffeeshop_nearby(message: types.Message):
 
     bot.send_message(message.from_user.id, 'Идет поиск кофеен по близости', reply_markup=get_menu_btn(types.ReplyKeyboardMarkup()))
     tic = time.perf_counter()
-    # data = service.get_coffeeshop_nearby(message.location.latitude, message.location.longitude)
-    data = page_controller.get_coffeeshop_nearby(60.016208, 30.372300)
+    data = page_controller.get_coffeeshop_nearby(message.location.latitude, message.location.longitude)
+    # data = page_controller.get_coffeeshop_nearby(60.016208, 30.372300)
     for item in data:
         markup.add(types.InlineKeyboardButton(text=item['text'], callback_data=item['callback_data']))
 
@@ -176,7 +177,40 @@ def pagination(markup, page, amount_data):
 
 @bot.callback_query_handler(func=lambda call: 'page' in call.data)
 def callback_page(call):
-
+    """
+    Перелистывает страницу
+    :param call:
+    :return:
+    """
     page = call.data.split()[-1]
     if page.isdigit():
         list_coffeeshop(call, int(page))
+
+
+@bot.message_handler(commands=['search_coffeeshop'])
+def search_coffeeshop_input(message):
+    """
+    Просит ввести названия кофейни
+    :param message:
+    :return:
+    """
+    markup = types.InlineKeyboardMarkup()
+    bot.send_message(message.from_user.id, 'Введите название кофейни c //', reply_markup=markup)
+
+
+# @bot.message_handler(content_types=["text"])
+# @bot.callback_query_handler(func=lambda message: '//' in message.text)
+def search_coffeeshop_output(message: types.Message):
+    """
+    Возвращает результат поиска
+    :param message:
+    :return:
+    """
+    page_controller = SearchCoffeeShopPageController(session)
+    markup = types.InlineKeyboardMarkup()
+    # markup.add(types.InlineKeyboardButton(switch_inline_query='', text='Coffee'))
+    data = page_controller.get_coffeeshop(message.text[2:])
+    for coffeeshop in data:
+        markup.add(types.InlineKeyboardButton(text=coffeeshop['text'], callback_data=coffeeshop['callback_data']))
+
+    bot.send_message(message.from_user.id, f'Результат поиска по "{message.text[2:]}":', reply_markup=markup)
