@@ -3,8 +3,8 @@ from service.coffeeshop_nearby_service import CoffeeShopNearbyService
 
 class CoffeeShopsNearPageController:
 
-    def __init__(self, session):
-        self.session = session
+    def __init__(self):
+        pass
 
     def get_coffeeshop_nearby(self, user_latitude, user_longitude):
         """
@@ -13,7 +13,7 @@ class CoffeeShopsNearPageController:
         :param user_longitude:
         :return:
         """
-        coffeeshop_service = CoffeeShopNearbyService(session=self.session)
+        coffeeshop_service = CoffeeShopNearbyService()
 
         coffeeshop_list = coffeeshop_service.get_coffeeshop_nearby(user_latitude, user_longitude)
         coffeeshop_list_view = []

@@ -1,14 +1,15 @@
 from math import radians, cos, sin, sqrt, asin
 import geopy.distance
 
+from model.coffeeshop import CoffeeShop
 from model.coffeeshop_manager import CoffeeShopManager
 
 
 class CoffeeShopNearbyService:
 
-    def __init__(self, session):
+    def __init__(self):
 
-        self.session = session
+        pass
 
     def get_coffeeshop_nearby(self, user_latitude, user_longitude):
         """
@@ -17,9 +18,10 @@ class CoffeeShopNearbyService:
         :param user_longitude: долгота пользователя
         :return:
         """
-        coffeeshop_manager = CoffeeShopManager(self.session)
+        coffeeshop_manager = CoffeeShopManager()
 
         coffeeshop_list = coffeeshop_manager.get_coffeeshops()
+        # coffeeshop_list = coffeeshop_manager.get_filtered_coffeeshop_list([CoffeeShop.get_distance(user_latitude, user_longitude)<2.0])
         coffeeshop_nearby_list = []
         for coffeeshop in coffeeshop_list:
             distance = geopy.distance.geodesic((user_latitude, user_longitude), (coffeeshop.latitude, coffeeshop.longitude)).km

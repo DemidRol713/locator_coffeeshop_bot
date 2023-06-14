@@ -5,8 +5,8 @@ from service.coffeeshop_card_service import CoffeeShopCardService
 
 class CoffeeShopPageController:
 
-    def __init__(self, session):
-        self.session = session
+    def __init__(self):
+        pass
 
     def get_coffeeshop(self, coffeeshop_id: int):
         """
@@ -15,7 +15,7 @@ class CoffeeShopPageController:
         :return:
         """
 
-        coffeeshop_card_service = CoffeeShopCardService(session=self.session)
+        coffeeshop_card_service = CoffeeShopCardService()
         coffeeshop = coffeeshop_card_service.get_coffeeshop(coffeeshop_id)
         coffeeshop_view = {
             'text': 'Кофейня "{name}"\n\n{description}\n\nАдрес:\n{address}\n\nСоц.сети и сайты:\n'.format(

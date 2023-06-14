@@ -3,9 +3,9 @@ from model.coffeeshop_manager import CoffeeShopManager
 
 class CoffeeShopCardService:
 
-    def __init__(self, session):
+    def __init__(self):
 
-        self.session = session
+        pass
 
     def get_coffeeshop(self, coffeeshop_id):
         """
@@ -13,6 +13,6 @@ class CoffeeShopCardService:
         :param coffeeshop_id:
         :return:
         """
-        coffeeshop_manager = CoffeeShopManager(self.session)
+        coffeeshop_manager = CoffeeShopManager()
 
         return coffeeshop_manager.get_coffeeshop_by_id(coffeeshop_id)

@@ -3,13 +3,13 @@ from service.search_coffeeshop_service import SearchCoffeeShop
 
 class SearchCoffeeShopPageController:
 
-    def __init__(self, session):
+    def __init__(self):
 
-        self.session = session
+        pass
 
     def get_coffeeshop(self, name_coffeeshop):
 
-        coffeeshop_service = SearchCoffeeShop(self.session)
+        coffeeshop_service = SearchCoffeeShop()
 
         coffeeshop_list = coffeeshop_service.get_coffeeshop_by_name(name_coffeeshop)
         coffeeshop_list_view = []

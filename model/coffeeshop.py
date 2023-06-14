@@ -1,9 +1,5 @@
-import sqlalchemy
-from sqlalchemy import Table, Index, Integer, String, Column, Text, \
-    DateTime, Boolean, PrimaryKeyConstraint, \
-    UniqueConstraint, ForeignKeyConstraint, Float
+from sqlalchemy import Integer, String, Column, Text, Float
 from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
 
 Base = declarative_base()
 

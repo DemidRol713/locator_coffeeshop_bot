@@ -3,8 +3,8 @@ from service.coffeeshop_list_service import CoffeeshopListService
 
 class CoffeeShopListPageController:
 
-    def __init__(self, session):
-        self.session = session
+    def __init__(self):
+        pass
 
     def get_coffeeshop_list(self, page):
         """
@@ -12,7 +12,7 @@ class CoffeeShopListPageController:
         :param page: номер страницы
         :return:
         """
-        coffeeshop_service = CoffeeshopListService(self.session)
+        coffeeshop_service = CoffeeshopListService()
 
         coffeeshop_list, count = coffeeshop_service.get_coffeeshop_list(page)
         coffeeshop_list_view = []

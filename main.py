@@ -1,22 +1,18 @@
 import os.path
-import time
 
 import telebot
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
+
 from telebot import types
 import logging
 
 import config
-from model.coffeeshop import CoffeeShop
 from page_controller.coffeeshop_card_page_controller import CoffeeShopPageController
 from page_controller.coffeeshop_list_page_controller import CoffeeShopListPageController
 from page_controller.coffeeshop_nearby_page_controller import CoffeeShopsNearPageController
 from page_controller.search_coffeeshop_page_controller import SearchCoffeeShopPageController
 
 bot = telebot.TeleBot(config.TG_TOKEN)
-engine = create_engine(config.DATA_BASE)
-session = Session(bind=engine)
+
 
 logger = telebot.logger
 # telebot.logger.basicConfig(filename='filename.log', level=logging.DEBUG,
@@ -27,7 +23,7 @@ if __name__ == '__main__':
     import app
 
 
-def get_menu_btn(markup):
+def get_menu_btn(markup: types.ReplyKeyboardMarkup):
     """
     Возвращает список кнопок меню
     :return:
@@ -40,7 +36,7 @@ def get_menu_btn(markup):
 
 
 @bot.message_handler(commands=['start'])
-def start(message):
+def start(message: types.Message):
     """
     Стартовое сообщение при запуске бота
     :param message:
@@ -54,7 +50,7 @@ def start(message):
 
 
 @bot.message_handler(commands=['menu'])
-def menu(message):
+def menu(message: types.Message):
     """
     Главное меню бота
     :param message:
@@ -70,7 +66,7 @@ def menu(message):
 
 
 @bot.callback_query_handler(func=lambda call: call.data == 'description')
-def description_option_bot(call):
+def description_option_bot(call: types.CallbackQuery):
     """
     Описание функций бота
     :param call:
@@ -82,14 +78,14 @@ def description_option_bot(call):
 
 
 @bot.message_handler(commands=['list_all_coffeeshop'])
-def list_coffeeshop(message, page=1):
+def list_coffeeshop(message: types.Message, page=1):
     """
     Список всех кофеен в базе данных
     :param message:
     :return:
     """
     markup = types.InlineKeyboardMarkup()
-    page_controller = CoffeeShopListPageController(session)
+    page_controller = CoffeeShopListPageController()
 
     coffeeshop_list, count = page_controller.get_coffeeshop_list(page)
     for coffeeshop in coffeeshop_list:
@@ -101,14 +97,14 @@ def list_coffeeshop(message, page=1):
 
 
 @bot.callback_query_handler(func=lambda call: 'coffeeshop' in call.data)
-def coffeeshop_card(call):
+def coffeeshop_card(call: types.CallbackQuery):
     """
     Карточка с данными кофейни
     :param call:
     :return:
     """
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    page_controller = CoffeeShopPageController(session)
+    page_controller = CoffeeShopPageController()
 
     coffeeshop_id = int(call.data.split('_')[-1])
 
@@ -123,7 +119,7 @@ def coffeeshop_card(call):
 
 
 @bot.callback_query_handler(func=lambda call: 'coffee_shop_nearby' in call.data)
-def user_location(call):
+def user_location(call: types.CallbackQuery):
     """
     Просит у пользователя его местоположение
     """
@@ -139,23 +135,19 @@ def coffeeshop_nearby(message: types.Message):
     """
     Возвращает список кофейн поблизости
     """
-    page_controller = CoffeeShopsNearPageController(session)
+    page_controller = CoffeeShopsNearPageController()
     markup = types.InlineKeyboardMarkup()
 
     bot.send_message(message.from_user.id, 'Идет поиск кофеен по близости', reply_markup=get_menu_btn(types.ReplyKeyboardMarkup()))
-    tic = time.perf_counter()
     data = page_controller.get_coffeeshop_nearby(message.location.latitude, message.location.longitude)
     # data = page_controller.get_coffeeshop_nearby(60.016208, 30.372300)
     for item in data:
         markup.add(types.InlineKeyboardButton(text=item['text'], callback_data=item['callback_data']))
 
-    toc = time.perf_counter()
     bot.send_message(message.from_user.id, 'В радиусе 2 км:', reply_markup=markup)
-    print(f"Вычисление заняло {toc - tic:0.4f} секунд")
-    print(len(data))
 
 
-def pagination(markup, page, amount_data):
+def pagination(markup: types.InlineKeyboardMarkup, page: int, amount_data: int):
     """
     Добавляет пагинацию
     :param markup:
@@ -176,7 +168,7 @@ def pagination(markup, page, amount_data):
 
 
 @bot.callback_query_handler(func=lambda call: 'page' in call.data)
-def callback_page(call):
+def callback_page(call: types.CallbackQuery):
     """
     Перелистывает страницу
     :param call:
@@ -188,7 +180,7 @@ def callback_page(call):
 
 
 @bot.message_handler(commands=['search_coffeeshop'])
-def search_coffeeshop_input(message):
+def search_coffeeshop_input(message: types.Message):
     """
     Просит ввести названия кофейни
     :param message:
@@ -206,7 +198,7 @@ def search_coffeeshop_output(message: types.Message):
     :param message:
     :return:
     """
-    page_controller = SearchCoffeeShopPageController(session)
+    page_controller = SearchCoffeeShopPageController()
     markup = types.InlineKeyboardMarkup()
     # markup.add(types.InlineKeyboardButton(switch_inline_query='', text='Coffee'))
     data = page_controller.get_coffeeshop(message.text[2:])
