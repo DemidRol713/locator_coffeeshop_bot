@@ -18,7 +18,7 @@ class CoffeeShopListPageController:
         coffeeshop_list_view = []
         for coffeeshop in coffeeshop_list:
             coffeeshop_view = {
-                'text': f'{coffeeshop.name} на {coffeeshop.address}',
+                'text': f'{coffeeshop.name} на 📍{coffeeshop.address}',
                 'callback_data': f'coffeeshop_{coffeeshop.id}'
             }
 

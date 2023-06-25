@@ -1,0 +1,8 @@
+name: locator_coffeeshop_bot
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - sqlalchemy
+  - psycopg2
+prefix: /home/demidrol/anaconda3/envs/locator_coffeeshop_bot

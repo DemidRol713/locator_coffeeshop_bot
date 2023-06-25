@@ -45,7 +45,7 @@ class DataStoreSql():
         :param filter:
         :return:
         """
-        return self.session.query(self.model).filter(filter)
+        return self.session.query(self.model).filter(filter).all()
 
     def get_data_with_pagination(self, page: int, amount_data: int):
         """
@@ -59,13 +59,22 @@ class DataStoreSql():
 
         return data, count
 
-    # def get_data_by_string(self, data: str):
-    #     """
-    #
-    #     :param data:
-    #     :return:
-    #     """
-    #     return self.session.query(self.model).filter(self.model.name.ilike(f'{data}%'))
+    def delete_row(self, filters):
+
+        query = self.session.query(self.model)
+        if filters is None:
+            query = query.filter(filters)
+
+        query.delete()
+        self.session.commit()
+
+    def update_row(self, filters, data_new):
+
+        query = self.session.query(self.model)
+        if filters is not None:
+            query = query.filter(filters)
+        query.update(data_new, synchronize_session='fetch')
+        self.session.commit()
 
 
 

@@ -109,13 +109,12 @@ def coffeeshop_card(call: types.CallbackQuery):
     coffeeshop_id = int(call.data.split('_')[-1])
 
     coffeeshop = page_controller.get_coffeeshop(coffeeshop_id)
+    # for image_name in coffeeshop['images']:
+    #     image = open(os.path.abspath(os.path.join(config.DATA_FOLDER, 'images',image_name)), 'rb')
+    #     bot.send_photo(call.from_user.id, image)
 
-    for image_name in coffeeshop['images']:
-        image = open(os.path.abspath(config.DATA_FOLDER + image_name), 'rb')
-        bot.send_photo(call.from_user.id, image)
-
-    bot.send_message(call.from_user.id, coffeeshop['text'], reply_markup=markup)
-    bot.send_location(call.from_user.id, coffeeshop.latitude, coffeeshop.longitude)
+    bot.send_message(call.from_user.id, coffeeshop['text'], reply_markup=markup, parse_mode='html')
+    bot.send_location(call.from_user.id, coffeeshop['latitude'], coffeeshop['longitude'])
 
 
 @bot.callback_query_handler(func=lambda call: 'coffee_shop_nearby' in call.data)
@@ -140,7 +139,6 @@ def coffeeshop_nearby(message: types.Message):
 
     bot.send_message(message.from_user.id, 'Идет поиск кофеен по близости', reply_markup=get_menu_btn(types.ReplyKeyboardMarkup()))
     data = page_controller.get_coffeeshop_nearby(message.location.latitude, message.location.longitude)
-    # data = page_controller.get_coffeeshop_nearby(60.016208, 30.372300)
     for item in data:
         markup.add(types.InlineKeyboardButton(text=item['text'], callback_data=item['callback_data']))
 
