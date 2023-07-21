@@ -5,4 +5,9 @@ dependencies:
   - python=3.10
   - sqlalchemy
   - psycopg2
+  - pip
+  - pip:
+      - telegram-bot-api
+      - paginate_sqlalchemy
+      - geopy
 prefix: /home/demidrol/anaconda3/envs/locator_coffeeshop_bot
